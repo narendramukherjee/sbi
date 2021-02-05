@@ -69,7 +69,7 @@ def sir(
         probs /= probs.sum()
 
         idxs = np.random.choice(
-            a=np.arange(init_strategy_num_candidates), size=1, replace=False, p=probs,
+            a=np.arange(init_strategy_num_candidates), size=1, replace=False, p=probs
         )
 
         return init_param_candidates[torch.from_numpy(idxs.astype(int)), :]

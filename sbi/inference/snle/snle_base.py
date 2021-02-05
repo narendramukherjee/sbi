@@ -35,7 +35,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
         logging_level: Union[int, str] = "WARNING",
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,
-        **unused_args
+        **unused_args,
     ):
         r"""Base class for Sequential Neural Likelihood Estimation methods.
 
@@ -61,7 +61,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
             logging_level=logging_level,
             summary_writer=summary_writer,
             show_progress_bars=show_progress_bars,
-            **unused_args
+            **unused_args,
         )
 
         # As detailed in the docstring, `density_estimator` is either a string or
@@ -79,7 +79,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
         self._summary.update({"mcmc_times": []})  # type: ignore
 
     def append_simulations(
-        self, theta: Tensor, x: Tensor, from_round: int = 0,
+        self, theta: Tensor, x: Tensor, from_round: int = 0
     ) -> "LikelihoodEstimator":
         r"""
         Store parameters and simulation outputs to use them for later training.
@@ -123,6 +123,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
         discard_prior_samples: bool = False,
         retrain_from_scratch_each_round: bool = False,
         show_train_summary: bool = False,
+        **dataloader_kwargs: Any,
     ) -> LikelihoodBasedPosterior:
         r"""
         Train the density estimator to learn the distribution $p(x|\theta)$.
@@ -137,6 +138,8 @@ class LikelihoodEstimator(NeuralInference, ABC):
                 estimator for the posterior from scratch each round.
             show_train_summary: Whether to print the number of epochs and validation
                 loss after the training.
+            dataloader_kwargs: Any additional kwargs to be passed to the training and
+                validation dataloaders (like a collate_fn)
 
         Returns:
             Density estimator that has learned the distribution $p(x|\theta)$.
@@ -173,6 +176,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
             batch_size=min(training_batch_size, num_training_examples),
             drop_last=True,
             sampler=SubsetRandomSampler(train_indices),
+            **dataloader_kwargs,
         )
         val_loader = data.DataLoader(
             dataset,
@@ -180,6 +184,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
             shuffle=False,
             drop_last=False,
             sampler=SubsetRandomSampler(val_indices),
+            **dataloader_kwargs,
         )
 
         # First round or if retraining from scratch:
@@ -197,7 +202,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
             ), "SNLE cannot handle multi-dimensional simulator output."
 
         self._neural_net.to(self._device)
-        optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate,)
+        optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate)
 
         epoch, self._val_log_prob = 0, float("-Inf")
         while epoch <= max_num_epochs and not self._converged(epoch, stop_after_epochs):
@@ -216,7 +221,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
                 loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
-                        self._neural_net.parameters(), max_norm=clip_max_norm,
+                        self._neural_net.parameters(), max_norm=clip_max_norm
                     )
                 optimizer.step()
 
@@ -247,9 +252,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
         self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
 
         # Update TensorBoard and summary dict.
-        self._summarize(
-            round_=self._round, x_o=None, theta_bank=theta, x_bank=x,
-        )
+        self._summarize(round_=self._round, x_o=None, theta_bank=theta, x_bank=x)
 
         # Update description for progress bar.
         if show_train_summary:

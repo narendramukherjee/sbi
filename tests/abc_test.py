@@ -12,10 +12,7 @@ from tests.test_utils import check_c2st
 
 @pytest.mark.parametrize("num_dim", (1, 2))
 def test_mcabc_inference_on_linear_gaussian(
-    num_dim,
-    lra=False,
-    sass=False,
-    sass_expansion_degree=1,
+    num_dim, lra=False, sass=False, sass_expansion_degree=1
 ):
     x_o = zeros((1, num_dim))
     num_samples = 1000
@@ -56,10 +53,7 @@ def test_mcabc_inference_on_linear_gaussian(
 def test_mcabc_sass_lra(lra, sass_expansion_degree, set_seed):
 
     test_mcabc_inference_on_linear_gaussian(
-        num_dim=2,
-        lra=lra,
-        sass=True,
-        sass_expansion_degree=sass_expansion_degree,
+        num_dim=2, lra=lra, sass=True, sass_expansion_degree=sass_expansion_degree
     )
 
 

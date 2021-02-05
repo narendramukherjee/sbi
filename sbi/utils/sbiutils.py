@@ -2,6 +2,7 @@
 # under the Affero General Public License v3, see <https://www.gnu.org/licenses/>.
 
 import logging
+import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
@@ -11,7 +12,6 @@ from torch import Tensor, as_tensor
 from torch import nn as nn
 from torch import ones, zeros
 from tqdm.auto import tqdm
-import warnings
 
 from sbi.utils.torchutils import BoxUniform, atleast_2d
 

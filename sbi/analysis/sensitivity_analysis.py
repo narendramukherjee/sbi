@@ -285,8 +285,7 @@ class ActiveSubspace:
             self._regression_net = self._build_nn(self._theta[train_indices])
 
         optimizer = optim.Adam(
-            list(self._regression_net.parameters()),
-            lr=learning_rate,
+            list(self._regression_net.parameters()), lr=learning_rate
         )
         max_num_epochs = 2 ** 31 - 1 if max_num_epochs is None else max_num_epochs
 
@@ -303,8 +302,7 @@ class ActiveSubspace:
                 loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
-                        self._regression_net.parameters(),
-                        max_norm=clip_max_norm,
+                        self._regression_net.parameters(), max_norm=clip_max_norm
                     )
                 optimizer.step()
 

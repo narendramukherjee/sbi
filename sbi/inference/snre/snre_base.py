@@ -31,7 +31,7 @@ class RatioEstimator(NeuralInference, ABC):
         logging_level: Union[int, str] = "warning",
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,
-        **unused_args
+        **unused_args,
     ):
         r"""Sequential Neural Ratio Estimation.
 
@@ -64,7 +64,7 @@ class RatioEstimator(NeuralInference, ABC):
             logging_level=logging_level,
             summary_writer=summary_writer,
             show_progress_bars=show_progress_bars,
-            **unused_args
+            **unused_args,
         )
 
         # As detailed in the docstring, `density_estimator` is either a string or
@@ -82,7 +82,7 @@ class RatioEstimator(NeuralInference, ABC):
         self._summary.update({"mcmc_times": []})  # type: ignore
 
     def append_simulations(
-        self, theta: Tensor, x: Tensor, from_round: int = 0,
+        self, theta: Tensor, x: Tensor, from_round: int = 0
     ) -> "RatioEstimator":
         r"""
         Store parameters and simulation outputs to use them for later training.
@@ -126,6 +126,7 @@ class RatioEstimator(NeuralInference, ABC):
         discard_prior_samples: bool = False,
         retrain_from_scratch_each_round: bool = False,
         show_train_summary: bool = False,
+        **dataloader_kwargs: Any,
     ) -> RatioBasedPosterior:
         r"""
         Return classifier that approximates the ratio $p(\theta,x)/p(\theta)p(x)$.
@@ -139,6 +140,8 @@ class RatioEstimator(NeuralInference, ABC):
                 samples.
             retrain_from_scratch_each_round: Whether to retrain the conditional density
                 estimator for the posterior from scratch each round.
+            dataloader_kwargs: Any additional kwargs to be passed to the training and
+                validation dataloaders (like a collate_fn)
 
         Returns:
             Classifier that approximates the ratio $p(\theta,x)/p(\theta)p(x)$.
@@ -181,6 +184,7 @@ class RatioEstimator(NeuralInference, ABC):
             batch_size=clipped_batch_size,
             drop_last=True,
             sampler=SubsetRandomSampler(train_indices),
+            **dataloader_kwargs,
         )
         val_loader = data.DataLoader(
             dataset,
@@ -188,6 +192,7 @@ class RatioEstimator(NeuralInference, ABC):
             shuffle=False,
             drop_last=False,
             sampler=SubsetRandomSampler(val_indices),
+            **dataloader_kwargs,
         )
 
         # First round or if retraining from scratch:
@@ -202,7 +207,7 @@ class RatioEstimator(NeuralInference, ABC):
             self._x_shape = x_shape_from_simulation(x)
 
         self._neural_net.to(self._device)
-        optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate,)
+        optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate)
 
         epoch, self._val_log_prob = 0, float("-Inf")
 
@@ -220,7 +225,7 @@ class RatioEstimator(NeuralInference, ABC):
                 loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
-                        self._neural_net.parameters(), max_norm=clip_max_norm,
+                        self._neural_net.parameters(), max_norm=clip_max_norm
                     )
                 optimizer.step()
 
@@ -250,9 +255,7 @@ class RatioEstimator(NeuralInference, ABC):
         self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
 
         # Update TensorBoard and summary dict.
-        self._summarize(
-            round_=self._round, x_o=None, theta_bank=theta, x_bank=x,
-        )
+        self._summarize(round_=self._round, x_o=None, theta_bank=theta, x_bank=x)
 
         # Update description for progress bar.
         if show_train_summary:

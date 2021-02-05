@@ -28,18 +28,9 @@ from tests.test_utils import (
 
 
 @pytest.mark.parametrize(
-    "num_dim, prior_str",
-    (
-        (2, "gaussian"),
-        (2, "uniform"),
-        (1, "gaussian"),
-    ),
+    "num_dim, prior_str", ((2, "gaussian"), (2, "uniform"), (1, "gaussian"))
 )
-def test_c2st_snpe_on_linearGaussian(
-    num_dim: int,
-    prior_str: str,
-    set_seed,
-):
+def test_c2st_snpe_on_linearGaussian(num_dim: int, prior_str: str, set_seed):
     """Test whether SNPE C infers well a simple example with available ground truth.
 
     Args:
@@ -71,10 +62,7 @@ def test_c2st_snpe_on_linearGaussian(
         return linear_gaussian(theta, likelihood_shift, likelihood_cov)
 
     simulator, prior = prepare_for_sbi(simulator, prior)
-    inference = SNPE_C(
-        prior,
-        show_progress_bars=False,
-    )
+    inference = SNPE_C(prior, show_progress_bars=False)
 
     theta, x = simulate_for_sbi(simulator, prior, 2000, simulation_batch_size=1000)
     _ = inference.append_simulations(theta, x).train(training_batch_size=100)
@@ -169,13 +157,11 @@ def test_c2st_snpe_on_linearGaussian_different_dims(set_seed):
         )
 
     simulator, prior = prepare_for_sbi(simulator, prior)
-    inference = SNPE_C(
-        prior,
-        density_estimator="maf",
-        show_progress_bars=False,
-    )
+    inference = SNPE_C(prior, density_estimator="maf", show_progress_bars=False)
 
-    theta, x = simulate_for_sbi(simulator, prior, 2000, simulation_batch_size=1)  # type: ignore
+    theta, x = simulate_for_sbi(
+        simulator, prior, 2000, simulation_batch_size=1
+    )  # type: ignore
     _ = inference.append_simulations(theta, x).train()
     posterior = inference.build_posterior()
     samples = posterior.sample((num_samples,), x=x_o)
@@ -192,8 +178,7 @@ def test_c2st_snpe_on_linearGaussian_different_dims(set_seed):
         pytest.param(
             "snpe_b",
             marks=pytest.mark.xfail(
-                raises=NotImplementedError,
-                reason="""SNPE-B not implemented""",
+                raises=NotImplementedError, reason="""SNPE-B not implemented"""
             ),
         ),
         "snpe_c",
@@ -363,11 +348,7 @@ def test_sample_conditional(set_seed):
     net = utils.posterior_nn("maf", hidden_features=20)
 
     simulator, prior = prepare_for_sbi(simulator, prior)
-    inference = SNPE_C(
-        prior,
-        density_estimator=net,
-        show_progress_bars=False,
-    )
+    inference = SNPE_C(prior, density_estimator=net, show_progress_bars=False)
 
     # We need a pretty big dataset to properly model the bimodality.
     theta, x = simulate_for_sbi(simulator, prior, 10000)
@@ -393,16 +374,8 @@ def test_sample_conditional(set_seed):
     density = gaussian_kde(cond_samples.numpy().T, bw_method="scott")
 
     X, Y = np.meshgrid(
-        np.linspace(
-            limits[0][0],
-            limits[0][1],
-            50,
-        ),
-        np.linspace(
-            limits[1][0],
-            limits[1][1],
-            50,
-        ),
+        np.linspace(limits[0][0], limits[0][1], 50),
+        np.linspace(limits[1][0], limits[1][1], 50),
     )
     positions = np.vstack([X.ravel(), Y.ravel()])
     sample_kde_grid = np.reshape(density(positions).T, X.shape)
@@ -443,10 +416,7 @@ def example_posterior():
         return linear_gaussian(theta, likelihood_shift, likelihood_cov)
 
     simulator, prior = prepare_for_sbi(simulator, prior)
-    inference = SNPE_C(
-        prior,
-        show_progress_bars=False,
-    )
+    inference = SNPE_C(prior, show_progress_bars=False)
     theta, x = simulate_for_sbi(
         simulator, prior, 1000, simulation_batch_size=10, num_workers=6
     )

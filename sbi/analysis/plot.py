@@ -32,7 +32,7 @@ def pairplot(
     labels: Optional[List[str]] = None,
     ticks: Union[List, torch.Tensor] = [],
     points_colors: List[str] = plt.rcParams["axes.prop_cycle"].by_key()["color"],
-    **kwargs
+    **kwargs,
 ):
     """
     Plot samples in a 2D grid showing marginals and pairwise marginals.
@@ -89,7 +89,7 @@ def conditional_pairplot(
     labels: Optional[List[str]] = None,
     ticks: Union[List, torch.Tensor] = [],
     points_colors: List[str] = plt.rcParams["axes.prop_cycle"].by_key()["color"],
-    **kwargs
+    **kwargs,
 ):
     r"""
     Plot conditional distribution given all other parameters.

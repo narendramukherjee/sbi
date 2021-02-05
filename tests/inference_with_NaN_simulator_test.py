@@ -39,11 +39,7 @@ def test_handle_invalid_x(x_shape, set_seed):
 @pytest.mark.slow
 @pytest.mark.parametrize(
     ("method", "exclude_invalid_x", "percent_nans"),
-    (
-        (SNPE_C, True, 0.05),
-        (SNL, True, 0.05),
-        (SRE, True, 0.05),
-    ),
+    ((SNPE_C, True, 0.05), (SNL, True, 0.05), (SRE, True, 0.05)),
 )
 def test_inference_with_nan_simulator(
     method, exclude_invalid_x, percent_nans, set_seed

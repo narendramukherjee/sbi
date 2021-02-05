@@ -37,7 +37,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         logging_level: Union[int, str] = "WARNING",
         summary_writer: Optional[SummaryWriter] = None,
         show_progress_bars: bool = True,
-        **unused_args
+        **unused_args,
     ):
         """Base class for Sequential Neural Posterior Estimation methods.
 
@@ -84,10 +84,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         self._summary.update({"rejection_sampling_acceptance_rates": []})  # type:ignore
 
     def append_simulations(
-        self,
-        theta: Tensor,
-        x: Tensor,
-        proposal: Optional[Any] = None,
+        self, theta: Tensor, x: Tensor, proposal: Optional[Any] = None
     ) -> "PosteriorEstimator":
         r"""
         Store parameters and simulation outputs to use them for later training.
@@ -166,6 +163,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         discard_prior_samples: bool = False,
         retrain_from_scratch_each_round: bool = False,
         show_train_summary: bool = False,
+        **dataloader_kwargs: Any,
     ) -> DirectPosterior:
         r"""
         Return density estimator that approximates the distribution $p(\theta|x)$.
@@ -192,6 +190,8 @@ class PosteriorEstimator(NeuralInference, ABC):
                 estimator for the posterior from scratch each round.
             show_train_summary: Whether to print the number of epochs and validation
                 loss after the training.
+            dataloader_kwargs: Any additional kwargs to be passed to the training and
+                validation dataloaders (like a collate_fn)
 
         Returns:
             Density estimator that approximates the distribution $p(\theta|x)$.
@@ -202,9 +202,6 @@ class PosteriorEstimator(NeuralInference, ABC):
             calibration_kernel = lambda x: ones([len(x)], device=self._device)
 
         max_num_epochs = 2 ** 31 - 1 if max_num_epochs is None else max_num_epochs
-
-        # Load data from most recent round.
-        theta, x, _ = self.get_simulations(self._round, exclude_invalid_x, False)
 
         # Starting index for the training set (1 = discard round-0 samples).
         start_idx = int(discard_prior_samples and self._round > 0)
@@ -232,11 +229,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         )
 
         # Dataset is shared for training and validation loaders.
-        dataset = data.TensorDataset(
-            theta,
-            x,
-            prior_masks,
-        )
+        dataset = data.TensorDataset(theta, x, prior_masks)
 
         # Create neural net and validation loaders using a subset sampler.
         train_loader = data.DataLoader(
@@ -244,6 +237,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             batch_size=min(training_batch_size, num_training_examples),
             drop_last=True,
             sampler=SubsetRandomSampler(train_indices),
+            **dataloader_kwargs,
         )
         val_loader = data.DataLoader(
             dataset,
@@ -251,6 +245,7 @@ class PosteriorEstimator(NeuralInference, ABC):
             shuffle=False,
             drop_last=True,
             sampler=SubsetRandomSampler(val_indices),
+            **dataloader_kwargs,
         )
 
         # First round or if retraining from scratch:
@@ -267,10 +262,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         # Move entire net to device for training.
         self._neural_net.to(self._device)
-        optimizer = optim.Adam(
-            list(self._neural_net.parameters()),
-            lr=learning_rate,
-        )
+        optimizer = optim.Adam(list(self._neural_net.parameters()), lr=learning_rate)
 
         epoch, self._val_log_prob = 0, float("-Inf")
         while epoch <= max_num_epochs and not self._converged(epoch, stop_after_epochs):
@@ -288,18 +280,13 @@ class PosteriorEstimator(NeuralInference, ABC):
 
                 batch_loss = torch.mean(
                     self._loss(
-                        theta_batch,
-                        x_batch,
-                        masks_batch,
-                        proposal,
-                        calibration_kernel,
+                        theta_batch, x_batch, masks_batch, proposal, calibration_kernel
                     )
                 )
                 batch_loss.backward()
                 if clip_max_norm is not None:
                     clip_grad_norm_(
-                        self._neural_net.parameters(),
-                        max_norm=clip_max_norm,
+                        self._neural_net.parameters(), max_norm=clip_max_norm
                     )
                 optimizer.step()
 
@@ -317,11 +304,7 @@ class PosteriorEstimator(NeuralInference, ABC):
                     )
                     # Take negative loss here to get validation log_prob.
                     batch_log_prob = -self._loss(
-                        theta_batch,
-                        x_batch,
-                        masks_batch,
-                        proposal,
-                        calibration_kernel,
+                        theta_batch, x_batch, masks_batch, proposal, calibration_kernel
                     )
                     log_prob_sum += batch_log_prob.sum().item()
 
@@ -338,12 +321,7 @@ class PosteriorEstimator(NeuralInference, ABC):
         self._summary["best_validation_log_probs"].append(self._best_val_log_prob)
 
         # Update tensorboard and summary dict.
-        self._summarize(
-            round_=self._round,
-            x_o=None,
-            theta_bank=theta,
-            x_bank=x,
-        )
+        self._summarize(round_=self._round, x_o=None, theta_bank=theta, x_bank=x)
 
         # Update description for progress bar.
         if show_train_summary:

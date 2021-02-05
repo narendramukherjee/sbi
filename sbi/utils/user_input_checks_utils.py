@@ -168,11 +168,7 @@ class MultipleIndependent(Distribution):
             Uniform(torch.ones(1), 2.0 * torch.ones(1))]
     """
 
-    def __init__(
-        self,
-        dists: Sequence[Distribution],
-        validate_args=None,
-    ):
+    def __init__(self, dists: Sequence[Distribution], validate_args=None):
         self._check_distributions(dists)
 
         self.dists = dists

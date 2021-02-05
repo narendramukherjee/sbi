@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 import pytest
-from torch import zeros, ones, eye
+from torch import eye, ones, zeros
 from torch.distributions import MultivariateNormal
-from sbi.simulators import linear_gaussian
+
 from sbi import utils as utils
-from sbi.inference import SNPE, SNLE, SNRE, simulate_for_sbi
+from sbi.inference import SNLE, SNPE, SNRE, simulate_for_sbi
+from sbi.simulators import linear_gaussian
 from sbi.utils.torchutils import process_device
 
 
@@ -52,14 +53,14 @@ def test_training_and_mcmc_on_device(method, model, device):
         return linear_gaussian(theta, likelihood_shift, likelihood_cov)
 
     if method == SNPE:
-        kwargs = dict(density_estimator=utils.posterior_nn(model=model),)
-        mcmc_kwargs = dict(sample_with_mcmc=True, mcmc_method="slice_np",)
+        kwargs = dict(density_estimator=utils.posterior_nn(model=model))
+        mcmc_kwargs = dict(sample_with_mcmc=True, mcmc_method="slice_np")
     elif method == SNLE:
-        kwargs = dict(density_estimator=utils.likelihood_nn(model=model),)
+        kwargs = dict(density_estimator=utils.likelihood_nn(model=model))
         mcmc_kwargs = dict(mcmc_method="slice")
     elif method == SNRE:
-        kwargs = dict(classifier=utils.classifier_nn(model=model),)
-        mcmc_kwargs = dict(mcmc_method="slice_np_vectorized",)
+        kwargs = dict(classifier=utils.classifier_nn(model=model))
+        mcmc_kwargs = dict(mcmc_method="slice_np_vectorized")
     else:
         raise ValueError()
 

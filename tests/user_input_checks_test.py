@@ -89,7 +89,7 @@ def matrix_simulator(theta):
 @pytest.mark.parametrize(
     "wrapper, prior",
     (
-        (CustomPytorchWrapper, UserNumpyUniform(zeros(3), ones(3), return_numpy=True),),
+        (CustomPytorchWrapper, UserNumpyUniform(zeros(3), ones(3), return_numpy=True)),
         (ScipyPytorchWrapper, multivariate_normal()),
         (ScipyPytorchWrapper, uniform()),
         (ScipyPytorchWrapper, beta(a=1, b=1)),
@@ -139,7 +139,7 @@ def test_reinterpreted_batch_dim_prior():
             Uniform(zeros((1, 3)), ones((1, 3))), marks=pytest.mark.xfail
         ),  # batch shape > 1.
         pytest.param(
-            MultivariateNormal(zeros(3, 3), eye(3)), marks=pytest.mark.xfail,
+            MultivariateNormal(zeros(3, 3), eye(3)), marks=pytest.mark.xfail
         ),  # batch shape > 1.
         pytest.param(
             Uniform(zeros(3), ones(3)), marks=pytest.mark.xfail
@@ -167,7 +167,7 @@ def test_process_prior(prior):
 
 
 @pytest.mark.parametrize(
-    "x, x_shape", ((ones(3), torch.Size([1, 3])), (ones(1, 3), torch.Size([1, 3])),),
+    "x, x_shape", ((ones(3), torch.Size([1, 3])), (ones(1, 3), torch.Size([1, 3])))
 )
 def test_process_x(x, x_shape):
     process_x(x, x_shape)
@@ -180,7 +180,7 @@ def test_process_x(x, x_shape):
         (diagonal_linear_gaussian, BoxUniform(zeros(2), ones(2))),
         (numpy_linear_gaussian, UserNumpyUniform(zeros(2), ones(2), True)),
         (linear_gaussian_no_batch, BoxUniform(zeros(2), ones(2))),
-        pytest.param(list_simulator, BoxUniform(zeros(2), ones(2)),),
+        pytest.param(list_simulator, BoxUniform(zeros(2), ones(2))),
     ),
 )
 def test_process_simulator(simulator: Callable, prior: Distribution):
@@ -200,20 +200,14 @@ def test_process_simulator(simulator: Callable, prior: Distribution):
 @pytest.mark.parametrize(
     "simulator, prior",
     (
-        (linear_gaussian_no_batch, BoxUniform(zeros(3), ones(3)),),
-        (
-            numpy_linear_gaussian,
-            UserNumpyUniform(zeros(3), ones(3), return_numpy=True),
-        ),
+        (linear_gaussian_no_batch, BoxUniform(zeros(3), ones(3))),
+        (numpy_linear_gaussian, UserNumpyUniform(zeros(3), ones(3), return_numpy=True)),
         (diagonal_linear_gaussian, BoxUniform(zeros(3), ones(3))),
         (
             diagonal_linear_gaussian,
             BoxUniform(zeros(3, dtype=torch.float64), ones(3, dtype=torch.float64)),
         ),
-        (
-            numpy_linear_gaussian,
-            UserNumpyUniform(zeros(3), ones(3), return_numpy=True),
-        ),
+        (numpy_linear_gaussian, UserNumpyUniform(zeros(3), ones(3), return_numpy=True)),
         (
             diagonal_linear_gaussian,
             [
@@ -222,7 +216,7 @@ def test_process_simulator(simulator: Callable, prior: Distribution):
                 MultivariateNormal(zeros(2), eye(2)),
             ],
         ),
-        pytest.param(list_simulator, BoxUniform(zeros(3), ones(3)),),
+        pytest.param(list_simulator, BoxUniform(zeros(3), ones(3))),
     ),
 )
 def test_prepare_sbi_problem(simulator: Callable, prior):
@@ -251,17 +245,11 @@ def test_prepare_sbi_problem(simulator: Callable, prior):
             BoxUniform(zeros(3, dtype=torch.float64), ones(3, dtype=torch.float64)),
         ),
         (linear_gaussian_no_batch, BoxUniform(zeros(3), ones(3))),
-        (
-            numpy_linear_gaussian,
-            UserNumpyUniform(zeros(3), ones(3), return_numpy=True),
-        ),
+        (numpy_linear_gaussian, UserNumpyUniform(zeros(3), ones(3), return_numpy=True)),
         (diagonal_linear_gaussian, BoxUniform(zeros(3), ones(3))),
         (linear_gaussian_no_batch, BoxUniform(zeros(3), ones(3))),
         (list_simulator, BoxUniform(-ones(3), ones(3))),
-        (
-            numpy_linear_gaussian,
-            UserNumpyUniform(zeros(3), ones(3), return_numpy=True),
-        ),
+        (numpy_linear_gaussian, UserNumpyUniform(zeros(3), ones(3), return_numpy=True)),
         (
             diagonal_linear_gaussian,
             (
@@ -278,7 +266,7 @@ def test_inference_with_user_sbi_problems(user_simulator: Callable, user_prior):
     """
 
     simulator, prior = prepare_for_sbi(user_simulator, user_prior)
-    inference = SNPE_C(prior, density_estimator="maf", show_progress_bars=False,)
+    inference = SNPE_C(prior, density_estimator="maf", show_progress_bars=False)
 
     # Run inference.
     theta, x = simulate_for_sbi(simulator, prior, 100)

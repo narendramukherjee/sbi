@@ -12,7 +12,7 @@ import os
 import sys
 from shutil import rmtree
 
-from setuptools import find_packages, setup, Command
+from setuptools import Command, find_packages, setup
 
 # Package meta-data.
 NAME = "sbi"
@@ -56,7 +56,7 @@ EXTRAS = {
         "scikit-learn",
         "torchtestcase",
         "twine",
-    ],
+    ]
 }
 
 here = os.path.abspath(os.path.dirname(__file__))

@@ -18,9 +18,9 @@ from sbi.simulators.simutils import simulate_in_batches
 from sbi.utils import (
     get_log_root,
     handle_invalid_x,
+    warn_if_zscoring_changes_data,
     warn_on_invalid_x,
     warn_on_invalid_x_for_snpec_leakage,
-    warn_if_zscoring_changes_data,
 )
 from sbi.utils.sbiutils import get_simulations_since_round
 from sbi.utils.torchutils import process_device
@@ -125,7 +125,7 @@ class NeuralInference(ABC):
                 f"the corresponding pull request on github: "
                 f"https://github.com/mackelab/sbi/pull/378 and tutorials: "
                 f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/ for "
-                f"further information.",
+                f"further information."
             )
 
         self._prior = prior
@@ -177,7 +177,7 @@ class NeuralInference(ABC):
             f"For more information, visit our website: "
             f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/ or "
             f"see the corresponding pull request on github: "
-            f"https://github.com/mackelab/sbi/pull/378.",
+            f"https://github.com/mackelab/sbi/pull/378."
         )
 
     def provide_presimulated(
@@ -211,7 +211,7 @@ class NeuralInference(ABC):
             f"github: "
             f"https://github.com/mackelab/sbi/pull/378"
             f"and tutorials: "
-            f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/",
+            f"https://www.mackelab.org/sbi/tutorial/02_flexible_interface/"
         )
 
     def get_simulations(
@@ -311,9 +311,7 @@ class NeuralInference(ABC):
 
         method = self.__class__.__name__
         logdir = Path(
-            get_log_root(),
-            method,
-            datetime.now().isoformat().replace(":", "_"),
+            get_log_root(), method, datetime.now().isoformat().replace(":", "_")
         )
         return SummaryWriter(logdir)
 
@@ -374,11 +372,7 @@ class NeuralInference(ABC):
         assert torch.isfinite(quantity).all(), msg
 
     def _summarize(
-        self,
-        round_: int,
-        x_o: Union[Tensor, None],
-        theta_bank: Tensor,
-        x_bank: Tensor,
+        self, round_: int, x_o: Union[Tensor, None], theta_bank: Tensor, x_bank: Tensor
     ) -> None:
         """Update the summary_writer with statistics for a given round.
 
@@ -393,12 +387,7 @@ class NeuralInference(ABC):
         # Median |x - x0| for most recent round.
         if x_o is not None:
             median_observation_distance = torch.median(
-                torch.sqrt(
-                    torch.sum(
-                        (x_bank - x_o.reshape(1, -1)) ** 2,
-                        dim=-1,
-                    )
-                )
+                torch.sqrt(torch.sum((x_bank - x_o.reshape(1, -1)) ** 2, dim=-1))
             )
             self._summary["median_observation_distances"].append(
                 median_observation_distance.item()
@@ -481,11 +470,7 @@ def simulate_for_sbi(
     theta = proposal.sample((num_simulations,))
 
     x = simulate_in_batches(
-        simulator,
-        theta,
-        simulation_batch_size,
-        num_workers,
-        show_progress_bar,
+        simulator, theta, simulation_batch_size, num_workers, show_progress_bar
     )
 
     return theta, x
