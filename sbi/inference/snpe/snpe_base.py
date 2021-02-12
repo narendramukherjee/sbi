@@ -8,7 +8,6 @@ from typing import Any, Callable, Dict, Optional, Union
 from warnings import warn
 
 import torch
-
 from torch import Tensor, ones, optim
 from torch.nn.utils import clip_grad_norm_
 from torch.utils import data
@@ -284,8 +283,7 @@ class PosteriorEstimator(NeuralInference, ABC):
 
         if not resume_training:
             self.optimizer = optim.Adam(
-                list(self._neural_net.parameters()),
-                lr=learning_rate,
+                list(self._neural_net.parameters()), lr=learning_rate
             )
             self.epoch, self._val_log_prob = 0, float("-Inf")
 
