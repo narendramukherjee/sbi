@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Any, Callable, Dict, Optional, Union
 
 import torch
+
 from torch import Tensor, eye, ones, optim
 from torch.nn.utils import clip_grad_norm_
 from torch.utils import data
@@ -126,7 +127,7 @@ class RatioEstimator(NeuralInference, ABC):
         discard_prior_samples: bool = False,
         retrain_from_scratch_each_round: bool = False,
         show_train_summary: bool = False,
-        **dataloader_kwargs: Any,
+        dataloader_kwargs: Optional[Dict] = None,
     ) -> RatioBasedPosterior:
         r"""
         Return classifier that approximates the ratio $p(\theta,x)/p(\theta)p(x)$.
@@ -141,7 +142,7 @@ class RatioEstimator(NeuralInference, ABC):
             retrain_from_scratch_each_round: Whether to retrain the conditional density
                 estimator for the posterior from scratch each round.
             dataloader_kwargs: Any additional kwargs to be passed to the training and
-                validation dataloaders (like a collate_fn)
+                validation dataloaders (like, eg., a collate_fn)
 
         Returns:
             Classifier that approximates the ratio $p(\theta,x)/p(\theta)p(x)$.
@@ -179,21 +180,32 @@ class RatioEstimator(NeuralInference, ABC):
         dataset = data.TensorDataset(theta, x)
 
         # Create neural net and validation loaders using a subset sampler.
-        train_loader = data.DataLoader(
-            dataset,
-            batch_size=clipped_batch_size,
-            drop_last=True,
-            sampler=SubsetRandomSampler(train_indices),
-            **dataloader_kwargs,
+        # Intentionally use dicts to define the default dataloader args
+        # Then, use dataloader_kwargs to override (or add to) any of these defaults
+        # https://stackoverflow.com/questions/44784577/in-method-call-args-how-to-override-keyword-argument-of-unpacked-dict
+        train_loader_kwargs = {
+            "batch_size": min(training_batch_size, num_training_examples),
+            "drop_last": True,
+            "sampler": SubsetRandomSampler(train_indices),
+        }
+        train_loader_kwargs = (
+            dict(train_loader_kwargs, **dataloader_kwargs)
+            if dataloader_kwargs is not None
+            else train_loader_kwargs
         )
-        val_loader = data.DataLoader(
-            dataset,
-            batch_size=clipped_batch_size,
-            shuffle=False,
-            drop_last=False,
-            sampler=SubsetRandomSampler(val_indices),
-            **dataloader_kwargs,
+        val_loader_kwargs = {
+            "batch_size": min(training_batch_size, num_validation_examples),
+            "shuffle": False,
+            "drop_last": True,
+            "sampler": SubsetRandomSampler(val_indices),
+        }
+        val_loader_kwargs = (
+            dict(val_loader_kwargs, **dataloader_kwargs)
+            if dataloader_kwargs is not None
+            else val_loader_kwargs
         )
+        train_loader = data.DataLoader(dataset, train_loader_kwargs)
+        val_loader = data.DataLoader(dataset, val_loader_kwargs)
 
         # First round or if retraining from scratch:
         # Call the `self._build_neural_net` with the rounds' thetas and xs as
