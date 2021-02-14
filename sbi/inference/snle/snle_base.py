@@ -185,7 +185,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
         train_loader_kwargs = {
             "batch_size": min(training_batch_size, num_training_examples),
             "drop_last": True,
-            "sampler": SubsetRandomSampler(train_indices),
+            "sampler": SubsetRandomSampler(self.train_indices),
         }
         train_loader_kwargs = (
             dict(train_loader_kwargs, **dataloader_kwargs)
@@ -196,7 +196,7 @@ class LikelihoodEstimator(NeuralInference, ABC):
             "batch_size": min(training_batch_size, num_validation_examples),
             "shuffle": False,
             "drop_last": True,
-            "sampler": SubsetRandomSampler(val_indices),
+            "sampler": SubsetRandomSampler(self.val_indices),
         }
         val_loader_kwargs = (
             dict(val_loader_kwargs, **dataloader_kwargs)
