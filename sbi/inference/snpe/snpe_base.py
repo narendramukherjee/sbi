@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, Optional, Union
 from warnings import warn
 
 import torch
+
 from torch import Tensor, ones, optim
 from torch.nn.utils import clip_grad_norm_
 from torch.utils import data
@@ -263,8 +264,8 @@ class PosteriorEstimator(NeuralInference, ABC):
             if dataloader_kwargs is not None
             else val_loader_kwargs
         )
-        train_loader = data.DataLoader(dataset, train_loader_kwargs)
-        val_loader = data.DataLoader(dataset, val_loader_kwargs)
+        train_loader = data.DataLoader(dataset, **train_loader_kwargs)
+        val_loader = data.DataLoader(dataset, **val_loader_kwargs)
 
         # First round or if retraining from scratch:
         # Call the `self._build_neural_net` with the rounds' thetas and xs as
